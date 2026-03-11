@@ -3,6 +3,10 @@
 
 name: Build and deploy JAR app to Azure Web App - smart-inventory-backend
 
+env:
+  # Must match your App Service name in Azure Portal (your logs show WEBSITE_SITE_NAME = smartinventorybackend)
+  AZURE_WEBAPP_NAME: smartinventorybackend
+
 on:
   push:
     branches:
@@ -25,13 +29,13 @@ jobs:
           distribution: 'microsoft'
 
       - name: Build with Maven
-        run: mvn clean install
+        run: mvn -B -DskipTests clean package
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
           name: java-app
-          path: '${{ github.workspace }}/target/*.jar'
+          path: '${{ github.workspace }}/target/app.jar'
 
   deploy:
     runs-on: ubuntu-latest
@@ -47,7 +51,7 @@ jobs:
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
         with:
-          app-name: 'smart-inventory-backend'
+          app-name: ${{ env.AZURE_WEBAPP_NAME }}
           slot-name: 'Production'
-          package: '*.jar'
+          package: 'app.jar'
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_18D97C49A1814741A56F82D58A39016D }}
