@@ -136,6 +136,12 @@ public class GlobalExceptionHandler {
             }
         } else {
             log.error("Unhandled exception for {} {}", request.getMethod(), request.getRequestURI(), ex);
+            message = "Unexpected error: " + ex.getClass().getSimpleName();
+        }
+
+        if (statusCode.is5xxServerError() && (ex instanceof ErrorResponse)) {
+            // For 5xx framework errors, still provide a small hint.
+            message = "Unexpected error: " + ex.getClass().getSimpleName();
         }
 
         ApiError body = new ApiError(
