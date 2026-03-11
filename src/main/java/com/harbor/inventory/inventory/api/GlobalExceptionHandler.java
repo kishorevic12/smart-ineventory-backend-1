@@ -5,8 +5,10 @@ import com.harbor.inventory.inventory.service.NotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.ErrorResponse;
 import org.springframework.web.servlet.NoHandlerFoundException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 import org.slf4j.Logger;
@@ -111,16 +113,39 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiError> handleUnexpected(Exception ex, HttpServletRequest request) {
-        log.error("Unhandled exception for {} {}", request.getMethod(), request.getRequestURI(), ex);
-        HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
+        HttpStatusCode statusCode = HttpStatus.INTERNAL_SERVER_ERROR;
+        String error = HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase();
+        String message = "Unexpected error";
+
+        // Preserve Spring's intended status for framework exceptions (e.g. 404/405/406/415)
+        // rather than turning them into 500s.
+        if (ex instanceof ErrorResponse errorResponse) {
+            statusCode = errorResponse.getStatusCode();
+            if (statusCode instanceof HttpStatus hs) {
+                error = hs.getReasonPhrase();
+            } else {
+                error = statusCode.toString();
+            }
+
+            if (statusCode.is5xxServerError()) {
+                log.error("Unhandled exception for {} {}", request.getMethod(), request.getRequestURI(), ex);
+            } else {
+                // 4xx errors can be caused by client/proxy differences (common in cloud deployments)
+                log.warn("Request failed for {} {}: {}", request.getMethod(), request.getRequestURI(), ex.toString());
+                message = error;
+            }
+        } else {
+            log.error("Unhandled exception for {} {}", request.getMethod(), request.getRequestURI(), ex);
+        }
+
         ApiError body = new ApiError(
                 Instant.now(),
-                status.value(),
-                status.getReasonPhrase(),
-                "Unexpected error",
+                statusCode.value(),
+                error,
+                message,
                 request.getRequestURI(),
                 null
         );
-        return ResponseEntity.status(status).body(body);
+        return ResponseEntity.status(statusCode).body(body);
     }
 }
