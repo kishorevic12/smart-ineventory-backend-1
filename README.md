@@ -132,6 +132,37 @@ docker compose up --build
 - Docker Compose (this repo): backend is exposed as `http://localhost:8080` via `8080:8080`.
 - If you run manually with a different host port, use `-p <hostPort>:8080`.
 
+## Deploy to Azure App Service (fixing the “ASP.NET Core Module” error)
+
+If Azure shows errors mentioning **ASP.NET Core Module** / **.NET Hosting Bundle**, that App Service was created for **.NET**.
+This repository is **Java (Spring Boot)**, so deploy it using one of the Java-friendly options below.
+
+### Option A (recommended): App Service for Containers (uses this repo’s Dockerfile)
+
+1) Create an App Service on **Linux** with **Docker Container**.
+2) Build/push the image (ACR recommended), then configure the Web App to pull that image.
+3) In App Service Configuration, set:
+  - `WEBSITES_PORT=8080`
+
+Notes:
+- The container listens on `${PORT:-8080}` (Azure typically sets `PORT` automatically).
+- Health endpoint: `/actuator/health`
+
+### Option B: App Service “Code” (Java 17) + deploy the runnable jar
+
+1) Create an App Service on **Linux** (or Windows) with Runtime stack **Java 17**.
+2) Build the jar:
+
+```powershell
+mvn -DskipTests clean package
+```
+
+3) Deploy the produced `target/*.jar` (for example via Zip Deploy, GitHub Actions, or Azure CLI).
+
+App settings you may need:
+- `PORT` is already supported by the app (`server.port: ${PORT:8080}`), so usually no extra port config is required.
+- If you switch from the default in-memory H2 to PostgreSQL, set `SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME`, `SPRING_DATASOURCE_PASSWORD`.
+
 ### 4) “Operation violates data integrity constraints” (HTTP 409)
 
 **Problem**: Creating/updating data can fail with a constraint violation (for example, duplicate values where a unique constraint exists).

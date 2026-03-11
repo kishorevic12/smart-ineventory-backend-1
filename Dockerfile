@@ -28,6 +28,6 @@ RUN apt-get update \
 	&& rm -rf /var/lib/apt/lists/*
 
 HEALTHCHECK --interval=10s --timeout=3s --retries=12 CMD \
-	curl -fsS http://127.0.0.1:8080/actuator/health | grep -q '"status"\s*:\s*"UP"' || exit 1
+	curl -fsS http://127.0.0.1:${PORT:-8080}/actuator/health | grep -q '"status"\s*:\s*"UP"' || exit 1
 
-ENTRYPOINT ["java","-jar","/app/app.jar","--server.port=8080"]
+ENTRYPOINT ["sh","-c","java -jar /app/app.jar --server.port=${PORT:-8080}"]
