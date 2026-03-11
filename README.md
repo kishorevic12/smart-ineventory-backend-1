@@ -157,7 +157,12 @@ Notes:
 mvn -DskipTests clean package
 ```
 
-3) Deploy the produced `target/*.jar` (for example via Zip Deploy, GitHub Actions, or Azure CLI).
+3) Deploy `target/app.jar` to the App Service (for example via Zip Deploy, GitHub Actions, or Azure CLI).
+
+If you see `Error: Unable to access jarfile app.jar`, it means Azure is running `java -jar app.jar` but the deployed files do not include `app.jar` at the expected path.
+Fix by ensuring `app.jar` is actually deployed to `/home/site/wwwroot/app.jar` and set Startup Command to:
+
+`java -jar /home/site/wwwroot/app.jar`
 
 App settings you may need:
 - `PORT` is already supported by the app (`server.port: ${PORT:8080}`), so usually no extra port config is required.
