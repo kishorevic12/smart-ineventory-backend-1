@@ -18,14 +18,16 @@ class InventoryApplicationTests {
     private MockMvc mockMvc;
 
     @Test
-    void contextLoads() {
-    }
-
-    @Test
     void rootEndpointReturnsOk() throws Exception {
         mockMvc.perform(get("/"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.service").value("harbor-inventory"))
-                .andExpect(jsonPath("$.status").value("ok"));
+                .andExpect(jsonPath("$.status").value("Inventory API running"));
+    }
+
+    @Test
+    void actuatorHealthIsUp() throws Exception {
+        mockMvc.perform(get("/actuator/health"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("UP"));
     }
 }

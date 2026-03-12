@@ -12,10 +12,7 @@ public class RootController {
     @GetMapping("/")
     public Map<String, String> root() {
         Map<String, String> body = new LinkedHashMap<>();
-        body.put("service", "harbor-inventory");
-        body.put("status", "ok");
-        body.put("health", "/actuator/health");
-        body.put("api", "/api");
+        body.put("status", "Inventory API running");
         return body;
     }
 }

@@ -8,6 +8,6 @@ import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 @ConfigurationPropertiesScan
 public class InventoryApplication {
     public static void main(String[] args) {
-         SpringApplication.run(InventoryApplication.class, args);
+        SpringApplication.run(InventoryApplication.class, args);
     }
 }
